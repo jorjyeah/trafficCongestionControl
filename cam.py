@@ -21,7 +21,7 @@ cap1 = cv2.VideoCapture(0)
 cap2 = cv2.VideoCapture(1)
 count = 0
 interval = 10
-encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 70]
 
 while True:
     ret1, frame1 = cap1.read()
@@ -40,6 +40,7 @@ while True:
     
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
+    #sleep(5)
     
 cap1.release()
 #cap2.release()
