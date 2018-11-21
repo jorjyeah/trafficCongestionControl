@@ -10,7 +10,7 @@ import time
 import RPi.GPIO as GPIO
 from time import sleep
 
-sever_ip = '192.168.43.167'
+sever_ip = '192.168.0.54'
 
 #API_ENDPOINT = "http://192.168.43.47/traffic_congestion"
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
