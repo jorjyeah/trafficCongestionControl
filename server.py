@@ -6,6 +6,7 @@ import numpy as np
 import struct ## new
 import zlib
 import signal
+import multiprocessing
 
 from cv2 import dnn
 
@@ -170,43 +171,97 @@ def yolo(frame):
 
 print('initialize server')
 
-HOST=''
-PORT=8485
+def cam1process():
 
-s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-print('Socket created')
+    HOST=''
+    PORT=8485
 
-s.bind((HOST,PORT))
-print('Socket bind complete')
-s.listen(10)
-print('Socket now listening')
+    s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    print('Socket created')
 
-conn,addr=s.accept()
+    s.bind((HOST,PORT))
+    print('Socket bind complete')
+    s.listen(10)
+    print('Socket now listening')
 
-data = b""
-payload_size = struct.calcsize(">L")
-print("payload_size: {}".format(payload_size))
-while True:
-    while len(data) < payload_size:
-        print("Recv2: {}".format(len(data)))
-        data += conn.recv(4096)
+    conn,addr=s.accept()
 
-    print("Done Recv: {}".format(len(data)))
-    packed_msg_size = data[:payload_size]
-    data = data[payload_size:]
-    msg_size = struct.unpack(">L", packed_msg_size)[0]
-    print("msg_size: {}".format(msg_size))
-    while len(data) < msg_size:
-        data += conn.recv(4096)
-    frame_data = data[:msg_size]
-    data = data[msg_size:]
+    data = b""
+    payload_size = struct.calcsize(">L")
+    print("payload_size: {}".format(payload_size))
+    while True:
+        while len(data) < payload_size:
+            print("Recv2: {}".format(len(data)))
+            data += conn.recv(4096)
 
-    frame=pickle.loads(frame_data, fix_imports=True, encoding="bytes")
-    frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
-    # image = caffe(frame)
-    image = yolo(frame)
-    cv2.imshow('ImageWindow',image)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+        print("Done Recv: {}".format(len(data)))
+        packed_msg_size = data[:payload_size]
+        data = data[payload_size:]
+        msg_size = struct.unpack(">L", packed_msg_size)[0]
+        print("msg_size: {}".format(msg_size))
+        while len(data) < msg_size:
+            data += conn.recv(4096)
+        frame_data = data[:msg_size]
+        data = data[msg_size:]
 
-cv2.destroyAllWindows()
+        frame=pickle.loads(frame_data, fix_imports=True, encoding="bytes")
+        frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
+        # image = caffe(frame)
+        # image = yolo(frame)
+        cv2.imshow('ImageWindow',frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cv2.destroyAllWindows()
+
+def cam2process():
+
+    HOST=''
+    PORT=8486
+
+    s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    print('Socket created')
+
+    s.bind((HOST,PORT))
+    print('Socket bind complete')
+    s.listen(10)
+    print('Socket now listening')
+
+    conn,addr=s.accept()
+
+    data = b""
+    payload_size = struct.calcsize(">L")
+    print("payload_size: {}".format(payload_size))
+    while True:
+        while len(data) < payload_size:
+            print("Recv2: {}".format(len(data)))
+            data += conn.recv(4096)
+
+        print("Done Recv: {}".format(len(data)))
+        packed_msg_size = data[:payload_size]
+        data = data[payload_size:]
+        msg_size = struct.unpack(">L", packed_msg_size)[0]
+        print("msg_size: {}".format(msg_size))
+        while len(data) < msg_size:
+            data += conn.recv(4096)
+        frame_data = data[:msg_size]
+        data = data[msg_size:]
+
+        frame=pickle.loads(frame_data, fix_imports=True, encoding="bytes")
+        frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
+        # image = caffe(frame)
+        # image = yolo(frame)
+        cv2.imshow('ImageWindow2',frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cv2.destroyAllWindows()
+
+jobs = []
+if __name__ == "__main__":
+    pros1 = multiprocessing.Process(target = cam1process)
+    pros2 = multiprocessing.Process(target = cam2process)
+    jobs.append(pros1)
+    jobs.append(pros2)
+    pros1.start()
+    pros2.start()
